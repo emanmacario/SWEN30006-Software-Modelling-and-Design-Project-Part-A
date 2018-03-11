@@ -4,13 +4,23 @@ import automail.StorageTube;
 
 public class MyRobotBehaviour implements IRobotBehaviour {
 	
+	private boolean strong;
+	private boolean newPriority;
+	
+	public MyRobotBehaviour(boolean strong) {
+		this.strong = strong;
+	}
+	
+	
 	/**
 	 * startDelivery() provides the robot the opportunity to 
 	 * initialise state in support of the other methods below. 
 	 */
 	@Override
 	public void startDelivery() {
-		// TO DO
+		
+		// If the robot started a delivery, don't want to return already.
+		this.newPriority = false;
 	}
 	
 	
@@ -23,7 +33,6 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	 */
 	@Override
 	public boolean returnToMailRoom(StorageTube tube) {
-		// TO DO
 		return false;
 	}
 	
@@ -36,7 +45,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
      */
 	@Override
 	public void priorityArrival(int priority, int weight) {
-		// TO DO
+		this.newPriority = true;
 	}
 }
 
