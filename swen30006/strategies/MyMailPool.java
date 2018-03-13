@@ -35,10 +35,8 @@ public class MyMailPool implements IMailPool {
 	
 	// Class constructor
 	public MyMailPool() {
-		
 		priorityPool = new ArrayList<PriorityMailItem>();
 		nonPriorityPool = new ArrayList<MailItem>();
-		
 	}
 	
 	
@@ -52,8 +50,10 @@ public class MyMailPool implements IMailPool {
 		
 		if (mailItem instanceof PriorityMailItem) {
 			priorityPool.add((PriorityMailItem)mailItem);
+			Collections.sort(priorityPool, comparatorFinal);
 		} else {
 			nonPriorityPool.add(mailItem);
+			Collections.sort(nonPriorityPool, comparatorFinal);
 		}
 	}
 	
@@ -70,18 +70,6 @@ public class MyMailPool implements IMailPool {
 			return;
 		}
 		
-		// Sort mail items based on whether robot is strong,
-		// or weak
-		if (strong) {
-			Collections.sort(priorityPool, priorityHeavy);
-			Collections.sort(nonPriorityPool, heavy);
-		} else {
-			Collections.sort(priorityPool, priorityLight);
-			Collections.sort(nonPriorityPool, light);
-		}
-		
-		
-		// wHILE 
 		while (!tube.isFull()) {
 			
 			if (priorityPool.size() > 0) {
@@ -127,25 +115,6 @@ public class MyMailPool implements IMailPool {
 	
 	
 	
-	private MailItem getNonPriorityMail(int weightLimit){
-		if(getNonPriorityPoolSize(weightLimit) > 0){
-			// Should I be getting the earliest one? 
-			// Surely the risk of the weak robot getting a heavy item is small!
-			return nonPriorityPool.pop();
-		}
-		
-		return null;
-	}
-	
-	
-	
-	private MailItem getHighestPriorityMail(int weightLimit){
-		if(getPriorityPoolSize(weightLimit) > 0){
-			// How am I supposed to know if this is the highest/earliest?
-			return priorityPool.pop();
-		}
-		return null;
-	}
 	
 	
 	
@@ -238,4 +207,55 @@ public class MyMailPool implements IMailPool {
 			return light.compare(p2, p1);
 		}
 	};
+	
+	
+	// Comparator based on the given 'time taken'
+	// measure provided in the specification
+	private Comparator<MailItem> comparatorFinal = 
+			new Comparator<MailItem>() {
+		@Override
+		public int compare(MailItem m1, MailItem m2) {
+			
+			int p1 = 0, p2 = 0;
+			
+			if (m1 instanceof PriorityMailItem) {
+				p1 = ((PriorityMailItem)m1).getPriorityLevel();
+			}
+			
+			if (m2 instanceof PriorityMailItem) {
+				p2 = ((PriorityMailItem)m2).getPriorityLevel();
+			}
+			
+			return Double.compare(calculateMeasure(m1, p1), 
+					calculateMeasure(m2, p2));
+		}
+	};
+	
+	
+	// Calculate the 'time taken' measure. Key
+	// assumption is that time taken to deliver
+	// is equal to the destination floor.
+	private double calculateMeasure(MailItem mailItem, int priority) {
+		return Math.pow(mailItem.getDestFloor(), 1.1)
+				*(1.0+Math.sqrt(priority));
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -6,6 +6,8 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	
 	private boolean strong;
 	private boolean newPriority;
+	private int newWeight;
+	
 	
 	public MyRobotBehaviour(boolean strong) {
 		this.strong = strong;
@@ -21,6 +23,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 		
 		// If the robot started a delivery, don't want to return already.
 		this.newPriority = false;
+		this.newWeight = 0;
 	}
 	
 	
@@ -33,6 +36,11 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	 */
 	@Override
 	public boolean returnToMailRoom(StorageTube tube) {
+		
+		// Maximum weight limit of an item, for 
+		// a given type of robot.
+		int weightLimit = strong ? Integer.MAX_VALUE : 2000;
+		
 		return false;
 	}
 	
@@ -46,6 +54,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	@Override
 	public void priorityArrival(int priority, int weight) {
 		this.newPriority = true;
+		this.newWeight = weight;
 	}
 }
 
