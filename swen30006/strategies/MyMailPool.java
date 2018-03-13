@@ -3,7 +3,7 @@ package strategies;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-
+import automail.Clock;
 
 import automail.MailItem;
 import automail.StorageTube;
@@ -26,17 +26,14 @@ public class MyMailPool implements IMailPool {
 	 */
 	
 	
-	// Separate the priority mail from non-priority mail
-	private ArrayList<PriorityMailItem> priorityPool;
-	private ArrayList<MailItem> nonPriorityPool;
-	
-	
+	// Hold all of our mail in a simple mail pool, sorted
+	// on destination floor
+	private ArrayList<MailItem> itemPool;
 	
 	
 	// Class constructor
 	public MyMailPool() {
-		priorityPool = new ArrayList<PriorityMailItem>();
-		nonPriorityPool = new ArrayList<MailItem>();
+		itemPool = new ArrayList<MailItem>();
 	}
 	
 	
@@ -47,14 +44,8 @@ public class MyMailPool implements IMailPool {
      */
 	@Override
 	public void addToPool(MailItem mailItem) {
+		itemPool.add(mailItem);
 		
-		if (mailItem instanceof PriorityMailItem) {
-			priorityPool.add((PriorityMailItem)mailItem);
-			Collections.sort(priorityPool, comparatorFinal);
-		} else {
-			nonPriorityPool.add(mailItem);
-			Collections.sort(nonPriorityPool, comparatorFinal);
-		}
 	}
 	
 	
@@ -65,148 +56,67 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void fillStorageTube(StorageTube tube, boolean strong) {
 		
-		// Check that tube isn't already full
-		if (tube.isFull()) {
-			return;
-		}
+		// First we sort the mail pool
+		Collections.sort(itemPool, comparatorFinal);
 		
-		while (!tube.isFull()) {
+		this.printMailPool();
+		
+		// Maximum capacity of the tube
+		int maximumCapacity = tube.MAXIMUM_CAPACITY;
+		
+		
+		// The max weight limit for the current robot
+		int weightLimit = strong ? Integer.MAX_VALUE : 2000;
+		
+		// The number of additional items we can put in the tube
+		int toAdd = maximumCapacity - tube.getSize();
+		
+		
+		// Try to add the highest possible priority
+		// item for each empty space in the storage tube
+		for (int i = 0; i < toAdd; i++) {
+			MailItem itemToAdd = getHighestPriorityMail(weightLimit);
 			
-			if (priorityPool.size() > 0) {
+			if (itemToAdd != null) {
 				try {
-					tube.addItem(priorityPool.get(priorityPool.size()-1));
+					tube.addItem(itemToAdd);
+					itemPool.remove(itemToAdd);
 				} catch (TubeFullException e) {
 					e.printStackTrace();
 				}
-			} else if (nonPriorityPool.size() > 0) {
-				try {
-					tube.addItem(nonPriorityPool.get(nonPriorityPool.size()-1));
-				} catch (TubeFullException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 	}
 	
 	
-	// Places highest priority on highest floor, then earliest
-	// arrival time of MailItem
-	private Comparator<MailItem> veryNormal =
-			new Comparator<MailItem>() {
-		@Override
-		public int compare(MailItem m1, MailItem m2) {
-			
-			// Next compare based on floor
-			if (m1.getDestFloor() != m2.getDestFloor()) {
-				
-				return m1.getDestFloor()-m2.getDestFloor();
-				
-			} 
-			// Lastly compare on arrival time. Want items that arrived earlier
-			// to have higher priority.
-			else if (m1.getArrivalTime() != m2.getArrivalTime()) {
-				
-				return m2.getArrivalTime()-m1.getArrivalTime();
-			}
-			
-			return 0;
-		}
-	};
 	
-	
-	
-	
-	
-	
-	private int getNonPriorityPoolSize(int weightLimit) {
+	// Returns if an acceptable weight mail item
+	// is ok to be delivered
+	private MailItem getHighestPriorityMail(int weightLimit) {
 		
-		int count = 0;
-		for (MailItem m : nonPriorityPool) {
-			if (m.getWeight() <= weightLimit) {
-				count++;
+		MailItem mailItem = null;
+		for (int i = itemPool.size()-1; i >= 0; i--) {
+			if (itemPool.get(i).getWeight() < weightLimit) {
+				mailItem = itemPool.get(i);
+				break;
 			}
 		}
-		return count;
-	}
-	
-	
-	
-	
-	private int getPriorityPoolSize(int weightLimit){
 		
-		int count = 0;
-		for (MailItem m : priorityPool) {
-			if (m.getWeight() <= weightLimit) {
-				count++;
-			}
-		}
-		return count;
+		return mailItem;
 	}
 	
 	
-
-	
-	
-	private Comparator<MailItem> heavy = 
-			new Comparator<MailItem>() {
-		@Override
-		public int compare(MailItem m1, MailItem m2) {
-			
-			// Compare based on weight foremost
-			if (m1.getWeight() != m2.getWeight()) {
-				
-				return m1.getWeight()-m2.getWeight();
-				
-			} else {
-				
-				return veryNormal.compare(m1, m2);
-			}
+	// Print the entire (sorted mailpool)
+	private void printMailPool() {
+		
+		System.out.println("\n================= MailPool Contents ====================");
+		
+		for (MailItem mi : itemPool) {
+			System.out.println(mi);
 		}
-	};
-	
-	
-	
-	private Comparator<MailItem> light =
-			new Comparator<MailItem>() {
-		@Override
-		public int compare(MailItem m1, MailItem m2) {
-			
-			if (m1.getWeight() != m2.getWeight()) {
-				return m2.getWeight()-m1.getWeight();
-			} else {
-				return veryNormal.compare(m1,  m2);
-			}
-		}
-	};
-	
-	
-	// Places greatest priority on highest priority, and heaviest.
-	private Comparator<PriorityMailItem> priorityHeavy = 
-			new Comparator<PriorityMailItem>() {
-		@Override
-		public int compare(PriorityMailItem p1, PriorityMailItem p2) {
-			
-			if (p1.getPriorityLevel() != p2.getPriorityLevel()) {
-				return p1.getPriorityLevel()-p2.getPriorityLevel();
-			}
-			return heavy.compare(p1, p2);
-		}
-	};
-	
-	
-	
-	// Places greatest priority on highest priority, and lightest.
-	private Comparator<PriorityMailItem> priorityLight = 
-			new Comparator<PriorityMailItem>() {
-		@Override
-		public int compare(PriorityMailItem p1, PriorityMailItem p2) {
-			
-			if (p1.getPriorityLevel() != p2.getPriorityLevel()) {
-				return p1.getPriorityLevel()-p2.getPriorityLevel();
-			}
-			return light.compare(p2, p1);
-		}
-	};
+		System.out.println("=========================================================\n");
+		
+	}
 	
 	
 	// Comparator based on the given 'time taken'
@@ -236,26 +146,11 @@ public class MyMailPool implements IMailPool {
 	// assumption is that time taken to deliver
 	// is equal to the destination floor.
 	private double calculateMeasure(MailItem mailItem, int priority) {
-		return Math.pow(mailItem.getDestFloor(), 1.1)
-				*(1.0+Math.sqrt(priority));
+		
+		// The time estimate between mail arriving,
+		// and mail reaching its delivery destination
+		int estimatedTime = Clock.Time()-mailItem.getArrivalTime()+mailItem.getDestFloor();
+				
+		return Math.pow(estimatedTime, 1.1)*(1.0+Math.sqrt(priority));
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
