@@ -14,16 +14,38 @@ public class Automail {
     	/** Initialize the MailPool */
     	
     	//// Swap the next line for the one below
-    	mailPool = new SimpleMailPool();
-//    	mailPool = new MyMailPool();
+    	//mailPool = new SimpleMailPool();
+    	//mailPool = new MyMailPool();
     	
         /** Initialize the RobotAction */
     	boolean weak = false;  // Can't handle more than 2000 grams
     	boolean strong = true; // Can handle any weight that arrives at the building
     	
+    	
+    	/****************/
+    	
+    	// Robot behaviours
+    	IRobotBehaviour robotBehaviourW, robotBehaviourS;
+    	
+    	// Whether to use my implementation or theirs
+    	boolean myImplementation = false;
+    	
+    	if (myImplementation) {
+    		mailPool = new MyMailPool();
+    		robotBehaviourW = new MyRobotBehaviour(weak);
+    		robotBehaviourS = new MyRobotBehaviour(strong);
+    	} else {
+    		mailPool = new SimpleMailPool();
+        	robotBehaviourW = new SimpleRobotBehaviour(weak);
+    		robotBehaviourS = new SimpleRobotBehaviour(strong);
+    	}
+    	
+    	/*****************/
+    	
+    	
     	//// Swap the next two lines for the two below those
-    	IRobotBehaviour robotBehaviourW = new SimpleRobotBehaviour(weak);
-    	IRobotBehaviour robotBehaviourS = new SimpleRobotBehaviour(strong);
+//    	IRobotBehaviour robotBehaviourW = new SimpleRobotBehaviour(weak);
+//    	IRobotBehaviour robotBehaviourS = new SimpleRobotBehaviour(strong);
 //    	IRobotBehaviour robotBehaviourW = new MyRobotBehaviour(weak);
 //    	IRobotBehaviour robotBehaviourS = new MyRobotBehaviour(strong);
     	    	
