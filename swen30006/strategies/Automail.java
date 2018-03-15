@@ -28,7 +28,7 @@ public class Automail {
     	IRobotBehaviour robotBehaviourW, robotBehaviourS;
     	
     	// Whether to use my implementation or theirs
-    	boolean myImplementation = false;
+    	boolean myImplementation = true;
     	
     	if (myImplementation) {
     		mailPool = new MyMailPool();
