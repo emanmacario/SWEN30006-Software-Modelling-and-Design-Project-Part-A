@@ -56,8 +56,15 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void fillStorageTube(StorageTube tube, boolean strong) {
 		
-		// First we sort the mail pool
-		Collections.sort(itemPool, comparatorFinal);
+		boolean compareByMeasure = false;
+		
+		if (compareByMeasure) {
+			// First we sort the mail pool
+			Collections.sort(itemPool, comparatorFinal);
+		} else {
+			Collections.sort(itemPool, floorComparator);
+		}
+		
 		
 		this.printMailPool();
 		
@@ -111,10 +118,13 @@ public class MyMailPool implements IMailPool {
 		
 		System.out.println("\n================= MailPool Contents ====================");
 		
+		// Print the current time
+		System.out.println("T: " + Clock.Time());
+		
 		for (MailItem mi : itemPool) {
 			System.out.println(mi);
 		}
-		System.out.println("=========================================================\n");
+		System.out.println("========================================================\n");
 		
 	}
 	
@@ -141,7 +151,7 @@ public class MyMailPool implements IMailPool {
 		}
 	};
 	
-	
+
 	// Calculate the 'time taken' measure. Key
 	// assumption is that time taken to deliver
 	// is equal to the destination floor.
@@ -153,4 +163,36 @@ public class MyMailPool implements IMailPool {
 				
 		return Math.pow(estimatedTime, 1.1)*(1.0+Math.sqrt(priority));
 	}
+	
+	//YUCKY CODE. CLEAN IT UP (IF IT WORKS)
+	
+	// Compares mail items based on destination floor.
+	// Within each destination floor echelon, sort
+	// mail items according to their priority.
+	private Comparator<MailItem> floorComparator = 
+			new Comparator<MailItem>() {
+		@Override
+		public int compare(MailItem m1, MailItem m2) {
+			
+			// Compare firstly by destination floor
+			if (m1.getDestFloor() != m2.getDestFloor()) {
+				return m1.getDestFloor() - m2.getDestFloor();
+			}
+			
+			// Then compare by priority
+			int p1 = 0, p2 = 0;
+			if (m1 instanceof PriorityMailItem) {
+				p1 = ((PriorityMailItem)m1).getPriorityLevel();
+			}
+			if (m2 instanceof PriorityMailItem) {
+				p2 = ((PriorityMailItem)m2).getPriorityLevel();
+			}
+			
+			// Then compare by arrival time
+			if (m1.getArrivalTime() != m2.getArrivalTime()) {
+				return m1.getArrivalTime()-m2.getArrivalTime();
+			}
+			return 0;
+		}
+	};
 }
