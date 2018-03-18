@@ -1,15 +1,21 @@
 package strategies;
 
+import automail.MailItem;
+import automail.PriorityMailItem;
 import automail.StorageTube;
 
 public class MyRobotBehaviour implements IRobotBehaviour {
 	
 	
 	private boolean strong;
+	private boolean newPriority;
+	private int newWeight;
+	private int weightLimit;
 	
 	
 	public MyRobotBehaviour(boolean strong) {
 		this.strong = strong;
+		this.weightLimit = strong ? Integer.MAX_VALUE : 2000;
 	}
 	
 	
@@ -19,7 +25,9 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	 */
 	@Override
 	public void startDelivery() {
-
+		this.newPriority = false;
+		this.newWeight = 0;
+		
 	}
 	
 	
@@ -32,6 +40,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	 */
 	@Override
 	public boolean returnToMailRoom(StorageTube tube) {
+						
 		
 		// Robot will not return to mail room unless
 		// their storage tube is completely empty.
@@ -47,7 +56,8 @@ public class MyRobotBehaviour implements IRobotBehaviour {
      */
 	@Override
 	public void priorityArrival(int priority, int weight) {
-		
+		this.newPriority = true;
+		this.newWeight = weight;
 	}
 }
 
