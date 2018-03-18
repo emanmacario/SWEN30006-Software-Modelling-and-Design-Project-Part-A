@@ -36,7 +36,6 @@ public class MyMailPool implements IMailPool {
 		itemPool = new ArrayList<MailItem>();
 	}
 	
-	
 
 	/**
      * Adds an item to the mail pool
@@ -45,7 +44,6 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void addToPool(MailItem mailItem) {
 		itemPool.add(mailItem);
-		
 	}
 	
 	
@@ -56,27 +54,23 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void fillStorageTube(StorageTube tube, boolean strong) {
 		
-		boolean compareByMeasure = false;
+		boolean compareByFloor = true;
 		
-		if (compareByMeasure) {
-			// First we sort the mail pool
-			Collections.sort(itemPool, comparatorFinal);
-		} else {
+		// First we sort the mail pool
+		if (compareByFloor) {
 			Collections.sort(itemPool, floorComparator);
+		} else {
+			Collections.sort(itemPool, floorMeasureComparator);
 		}
 		
-		
+		// Print the sorted mail pool
 		this.printMailPool();
-		
-		// Maximum capacity of the tube
-		int maximumCapacity = tube.MAXIMUM_CAPACITY;
-		
 		
 		// The max weight limit for the current robot
 		int weightLimit = strong ? Integer.MAX_VALUE : 2000;
 		
-		// The number of additional items we can put in the tube
-		int toAdd = maximumCapacity - tube.getSize();
+		//  The maximum number of additional items we can put in the tube
+		int toAdd = tube.MAXIMUM_CAPACITY - tube.getSize();
 		
 		
 		// Try to add the highest possible priority
@@ -108,7 +102,6 @@ public class MyMailPool implements IMailPool {
 				break;
 			}
 		}
-		
 		return mailItem;
 	}
 	
@@ -187,12 +180,43 @@ public class MyMailPool implements IMailPool {
 			if (m2 instanceof PriorityMailItem) {
 				p2 = ((PriorityMailItem)m2).getPriorityLevel();
 			}
+			if (p1 != p2) {
+				return (p1 - p2);
+			}
 			
-			// Then compare by arrival time
+			
+			// Compare by arrival time
 			if (m1.getArrivalTime() != m2.getArrivalTime()) {
 				return m1.getArrivalTime()-m2.getArrivalTime();
 			}
-			return 0;
+			
+			// Lastly compare by weight
+			return m1.getWeight() - m2.getWeight();
+		}
+	};
+	
+	// Combining the destination floor and measure comparator
+	private Comparator<MailItem> floorMeasureComparator =
+			new Comparator<MailItem>() {
+		@Override
+		public int compare(MailItem m1, MailItem m2) {
+			
+			// Compare firstly by destination floor
+			if (m1.getDestFloor() != m2.getDestFloor()) {
+				return m1.getDestFloor() - m2.getDestFloor();
+			}
+			
+			// Compare by measure given in the spec
+			int p1 = 0, p2 = 0;
+			if (m1 instanceof PriorityMailItem) {
+				p1 = ((PriorityMailItem)m1).getPriorityLevel();
+			}
+			if (m2 instanceof PriorityMailItem) {
+				p2 = ((PriorityMailItem)m2).getPriorityLevel();
+			}
+			
+			return Double.compare(calculateMeasure(m1, p1), 
+					calculateMeasure(m2, p2));
 		}
 	};
 }
