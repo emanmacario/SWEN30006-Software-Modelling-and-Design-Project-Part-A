@@ -1,37 +1,48 @@
+/**
+ * SWEN30006 Software Modelling and Design
+ * Semester 1, 2017
+ * Project (Part A)
+ * 
+ * Name: Emmanuel Macario
+ * Student Number: 831659
+ * 
+ */
+
+
+/** Package Name */
 package strategies;
 
+
+/** Useful classes from the Java standard library */
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import automail.Clock;
 
+
+/** Importing classes from the implementation */
 import automail.MailItem;
 import automail.StorageTube;
-import exceptions.TubeFullException;
 import automail.PriorityMailItem;
+import exceptions.TubeFullException;
 
 
+
+/**
+ * My implementation of the MailPool.
+ *
+ */
 public class MyMailPool implements IMailPool {
 	
-	// Idea: use a priority queue.
-	// The comparator needs to prioritise based on 3 factors: floor, weight, priority
-	
 	/**
-	 * For strong robots:
-	 * - Want to get highest priority, highest weight, highest floor first.
-	 * 
-	 * 
-	 * For weak robots:
-	 * - Want to get highest priority, lowest weight, highest floor first.
+	 * The current pool of mail to be delivered
 	 */
-	
-	
-	// Hold all of our mail in a simple mail pool, sorted
-	// on destination floor
 	private ArrayList<MailItem> itemPool;
 	
 	
-	// Class constructor
+	/** 
+	 * Class constructor.
+	 */
 	public MyMailPool() {
 		itemPool = new ArrayList<MailItem>();
 	}
@@ -54,14 +65,9 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void fillStorageTube(StorageTube tube, boolean strong) {
 		
-		boolean compareByFloor = true;
+		// Sort the item pool
+		Collections.sort(itemPool, floorComparator);
 		
-		// First we sort the mail pool
-		if (compareByFloor) {
-			Collections.sort(itemPool, floorComparator);
-		} else {
-			Collections.sort(itemPool, floorMeasureComparator);
-		}
 		
 		// Print the sorted mail pool
 		this.printMailPool();
@@ -75,6 +81,7 @@ public class MyMailPool implements IMailPool {
 		
 		// Try to add the highest possible priority
 		// item for each empty space in the storage tube
+
 		for (int i = 0; i < toAdd; i++) {
 			MailItem itemToAdd = getHighestPriorityMail(weightLimit);
 			
@@ -87,6 +94,16 @@ public class MyMailPool implements IMailPool {
 				}
 			}
 		}
+		/*
+		ArrayList<MailItem> itemsToAdd = getBestMail(weightLimit, toAdd);
+		
+		for (int i = itemsToAdd.size()-1; i >= 0; i--) {
+			try {
+				tube.addItem(itemsToAdd.get(i));
+			} catch (TubeFullException e) {
+				e.printStackTrace();
+			}
+		}*/
 	}
 	
 	
@@ -106,6 +123,36 @@ public class MyMailPool implements IMailPool {
 	}
 	
 	
+	// Gets the best items by measure
+	public ArrayList<MailItem> getBestMail(int weightLimit, int toAdd) {
+		ArrayList<MailItem> itemsToAdd = new ArrayList<>();
+		
+		Collections.sort(itemPool, measureComparator);
+		
+		for (int i = 0; i < toAdd; i++) {
+			
+			MailItem itemToAdd = null;
+			
+			for (MailItem mailItem : itemPool) {
+				if (mailItem.getWeight() < weightLimit) {
+					itemToAdd = mailItem;
+					break;
+				}
+			}
+			
+			if (itemToAdd != null) {
+				itemsToAdd.add(itemToAdd);
+				itemPool.remove(itemToAdd);
+			}
+		}
+		
+		Collections.sort(itemsToAdd, destinationComparator);
+		
+		return itemsToAdd;
+		
+	}
+	
+	
 	// Print the entire (sorted mailpool)
 	private void printMailPool() {
 		
@@ -122,29 +169,6 @@ public class MyMailPool implements IMailPool {
 	}
 	
 	
-	// Comparator based on the given 'time taken'
-	// measure provided in the specification
-	private Comparator<MailItem> comparatorFinal = 
-			new Comparator<MailItem>() {
-		@Override
-		public int compare(MailItem m1, MailItem m2) {
-			
-			int p1 = 0, p2 = 0;
-			
-			if (m1 instanceof PriorityMailItem) {
-				p1 = ((PriorityMailItem)m1).getPriorityLevel();
-			}
-			
-			if (m2 instanceof PriorityMailItem) {
-				p2 = ((PriorityMailItem)m2).getPriorityLevel();
-			}
-			
-			return Double.compare(calculateMeasure(m1, p1), 
-					calculateMeasure(m2, p2));
-		}
-	};
-	
-
 	// Calculate the 'time taken' measure. Key
 	// assumption is that time taken to deliver
 	// is equal to the destination floor.
@@ -152,12 +176,12 @@ public class MyMailPool implements IMailPool {
 		
 		// The time estimate between mail arriving,
 		// and mail reaching its delivery destination
-		int estimatedTime = Clock.Time()-mailItem.getArrivalTime()+mailItem.getDestFloor();
+		int estimatedTime = Clock.Time()-mailItem.getArrivalTime()+mailItem.getDestFloor()+1;
 				
 		return Math.pow(estimatedTime, 1.1)*(1.0+Math.sqrt(priority));
 	}
 	
-	//YUCKY CODE. CLEAN IT UP (IF IT WORKS)
+	
 	
 	// Compares mail items based on destination floor.
 	// Within each destination floor echelon, sort
@@ -167,10 +191,12 @@ public class MyMailPool implements IMailPool {
 		@Override
 		public int compare(MailItem m1, MailItem m2) {
 			
+			
 			// Compare firstly by destination floor
 			if (m1.getDestFloor() != m2.getDestFloor()) {
 				return m1.getDestFloor() - m2.getDestFloor();
 			}
+
 			
 			// Then compare by priority
 			int p1 = 0, p2 = 0;
@@ -185,28 +211,35 @@ public class MyMailPool implements IMailPool {
 			}
 			
 			
-			// Compare by arrival time
+			// Compare by arrival time, want mail that arrived first
+			// to have greater importance.
 			if (m1.getArrivalTime() != m2.getArrivalTime()) {
-				return m1.getArrivalTime()-m2.getArrivalTime();
+				return m2.getArrivalTime()-m1.getArrivalTime();
 			}
+			
 			
 			// Lastly compare by weight
 			return m1.getWeight() - m2.getWeight();
 		}
 	};
 	
-	// Combining the destination floor and measure comparator
-	private Comparator<MailItem> floorMeasureComparator =
+	
+	
+	private Comparator<MailItem> destinationComparator =
+			new Comparator<MailItem>() {
+		@Override
+		public int compare(MailItem m1, MailItem m2) {
+			return m1.getDestFloor()-m2.getDestFloor();
+		}
+	};
+	
+	
+	
+	private Comparator<MailItem> measureComparator = 
 			new Comparator<MailItem>() {
 		@Override
 		public int compare(MailItem m1, MailItem m2) {
 			
-			// Compare firstly by destination floor
-			if (m1.getDestFloor() != m2.getDestFloor()) {
-				return m1.getDestFloor() - m2.getDestFloor();
-			}
-			
-			// Compare by measure given in the spec
 			int p1 = 0, p2 = 0;
 			if (m1 instanceof PriorityMailItem) {
 				p1 = ((PriorityMailItem)m1).getPriorityLevel();
@@ -215,8 +248,7 @@ public class MyMailPool implements IMailPool {
 				p2 = ((PriorityMailItem)m2).getPriorityLevel();
 			}
 			
-			return Double.compare(calculateMeasure(m1, p1), 
-					calculateMeasure(m2, p2));
+			return Double.compare(calculateMeasure(m2,p2), calculateMeasure(m1,p1));
 		}
 	};
 }
