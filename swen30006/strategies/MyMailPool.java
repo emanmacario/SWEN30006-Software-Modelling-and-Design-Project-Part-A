@@ -29,7 +29,9 @@ import exceptions.TubeFullException;
 
 
 /**
- * My implementation of the MailPool.
+ * My implementation of the MailPool. Sorts
+ * mail according to priority and destination
+ * floor.
  *
  */
 public class MyMailPool implements IMailPool {
@@ -65,9 +67,41 @@ public class MyMailPool implements IMailPool {
 	@Override
 	public void fillStorageTube(StorageTube tube, boolean strong) {
 		
+		boolean useFloor = false;
+				
+		if (useFloor) {
+			useFloorComparator(tube, strong);
+		} else {
+			useMeasureComparator(tube, strong);
+		}
+	}
+	
+	
+	
+	private void useMeasureComparator(StorageTube tube, boolean strong) {
+		
+		// The max weight limit for the current robot
+		int weightLimit = strong ? Integer.MAX_VALUE : 2000;
+		
+		//  The maximum number of additional items we can put in the tube
+		int toAdd = tube.MAXIMUM_CAPACITY - tube.getSize();
+		
+		ArrayList<MailItem> itemsToAdd = getBestMail(weightLimit, toAdd);
+		
+		
+		for (int i = itemsToAdd.size()-1; i >= 0; i--) {
+			try {
+				tube.addItem(itemsToAdd.get(i));
+			} catch (TubeFullException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	
+	private void useFloorComparator(StorageTube tube, boolean strong) {
 		// Sort the item pool
 		Collections.sort(itemPool, floorComparator);
-		
 		
 		// Print the sorted mail pool
 		this.printMailPool();
@@ -94,18 +128,7 @@ public class MyMailPool implements IMailPool {
 				}
 			}
 		}
-		/*
-		ArrayList<MailItem> itemsToAdd = getBestMail(weightLimit, toAdd);
-		
-		for (int i = itemsToAdd.size()-1; i >= 0; i--) {
-			try {
-				tube.addItem(itemsToAdd.get(i));
-			} catch (TubeFullException e) {
-				e.printStackTrace();
-			}
-		}*/
 	}
-	
 	
 	
 	// Returns if an acceptable weight mail item
@@ -132,6 +155,16 @@ public class MyMailPool implements IMailPool {
 		for (int i = 0; i < toAdd; i++) {
 			
 			MailItem itemToAdd = null;
+				
+			
+			/*
+			for (int j = itemPool.size()-1; j >= 0; j--) {
+				if (itemPool.get(j).getWeight() < weightLimit) {
+					itemToAdd = itemPool.get(j);
+					break;
+				}
+			}*/
+			
 			
 			for (MailItem mailItem : itemPool) {
 				if (mailItem.getWeight() < weightLimit) {
