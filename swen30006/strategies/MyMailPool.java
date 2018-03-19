@@ -9,17 +9,17 @@
  * 
  */
 
-/** Package Name */
+/** Package Name. */
 package strategies;
 
 
-/** Useful classes from the Standard Java Library */
+/** Useful classes from the Standard Java Library. */
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
 
-/** Importing classes from the package */
+/** Importing classes from the package. */
 import automail.Clock;
 import automail.MailItem;
 import automail.StorageTube;
@@ -91,7 +91,7 @@ public class MyMailPool implements IMailPool {
     	
     	
     	/**
-    	 * Add each item to the tube in order
+    	 * Insert each item into the tube in order
     	 * of highest destination floor foremost.
     	 */
     	for (int i = itemsToAdd.size()-1; i >= 0; i--) {
