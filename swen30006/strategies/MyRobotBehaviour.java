@@ -1,21 +1,35 @@
+/**
+ * SWEN30006 Software Modelling and Design
+ * Semester 1, 2017
+ * Project - Part A
+ * 
+ * Name: Emmanuel Macario
+ * Student Number: 831659
+ * Last Modified: 19/03/18
+ * 
+ */
+
+/** Package Name. */
 package strategies;
 
+
+/** Importing classes from the automail package. */
 import automail.MailItem;
 import automail.PriorityMailItem;
 import automail.StorageTube;
+import automail.Building;
+
+
 
 public class MyRobotBehaviour implements IRobotBehaviour {
 	
-	
-	private boolean strong;
-	private boolean newPriority;
-	private int newWeight;
 	private int weightLimit;
+	private int newPriorityLevel;
+	private boolean newPriority;
 	
 	
 	public MyRobotBehaviour(boolean strong) {
-		this.strong = strong;
-		this.weightLimit = strong ? Integer.MAX_VALUE : 2000;
+		this.weightLimit = getWeightLimit(strong);
 	}
 	
 	
@@ -26,7 +40,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	@Override
 	public void startDelivery() {
 		this.newPriority = false;
-		this.newWeight = 0;
+		this.newPriorityLevel = 0;
 		
 	}
 	
@@ -40,10 +54,31 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	 */
 	@Override
 	public boolean returnToMailRoom(StorageTube tube) {
-						
 		
-		// Robot will not return to mail room unless
-		// their storage tube is completely empty.
+		MailItem mailItem = null;
+		
+		/* Get the uppermost mail item
+		 * in the tube, if there is one.
+		 */
+		if (tube.getSize() > 0) {
+			mailItem = tube.peek();
+		}
+		
+		/* If there is a new priority item with priority level
+		 * equal to 100, and our tube only contains a non-priority 
+		 * mail with destination floor less than the middle floor
+		 * of the building, then tell the robot to return.
+		 */
+		if (newPriority && newPriorityLevel == 100
+						&& mailItem != null
+						&& !(mailItem instanceof PriorityMailItem)
+						&& tube.getSize() == 1
+						&& mailItem.getDestFloor() < Building.FLOORS/2) {
+			return true;
+		}
+		
+		/* Otherwise, keep on delivering.
+		 */
 		return false;
 	}
 	
@@ -56,8 +91,26 @@ public class MyRobotBehaviour implements IRobotBehaviour {
      */
 	@Override
 	public void priorityArrival(int priority, int weight) {
-		this.newPriority = true;
-		this.newWeight = weight;
+		
+		/* Only consider priority items
+		 * that this robot can carry.
+		 */
+		if (weight < this.weightLimit) {
+			this.newPriority = true;
+			this.newPriorityLevel = priority;
+		}
 	}
+	
+	
+	/**
+     * Gets the maximum weight limit (non-inclusive)
+     * for a robot.
+     * 
+     * @param strong boolean indicating strong (true) or weak (false) robot.
+     * @return weightLimit
+     */
+    private int getWeightLimit(boolean strong) {
+    	return strong ? Integer.MAX_VALUE : 2000;
+    }
 }
 
