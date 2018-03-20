@@ -26,9 +26,14 @@ import exceptions.TubeFullException;
 
 
 /**
- * My implementation of the MyMailPool class. Sorts
- * mail according to priority and destination
- * floor.
+ * The MyMailPool class contains a mail pool of items
+ * to be delivered throughout different floors in a
+ * building. Mail items are stored in an array list 
+ * for easy access, and items are prioritised for delivery
+ * by being sorted with respect to their estimated time 
+ * measure scores. The class places mail items in a robot's 
+ * tube in such a manner that increases efficiency in its 
+ * total travel time.
  */
 public class MyMailPool implements IMailPool {
     
@@ -165,23 +170,6 @@ public class MyMailPool implements IMailPool {
     
     
     /**
-     * Prints the entire contents of the mail pool.
-     */
-    private void printMailPool() {
-        
-        System.out.println("\n================= MailPool Contents ====================");
-        
-        // Print the current time
-        System.out.println("T: " + Clock.Time());
-        
-        for (MailItem mi : itemPool) {
-            System.out.println(mi);
-        }
-        System.out.println("========================================================\n");
-    }
-    
-    
-    /**
      * Calculates the estimated measure score of time taken 
      * to deliver an item. This is the same measure used
      * to judge the system's performance across all delivered
@@ -206,13 +194,15 @@ public class MyMailPool implements IMailPool {
         /* Estimate the total time between the arrival time of
          * the mail item and the delivery time, if it were to
          * be delivered immediately to the destination floor.
+         * The +1 is the time it takes for a robot to unpack and
+         * deliver an item, once it has reached the destination floor.
          */
         int estimatedTime = Clock.Time() - mailItem.getArrivalTime() 
         						+ mailItem.getDestFloor() + 1;
         
         /* Finally, calculate the estimate value for the measure.
          */
-        return Math.pow(estimatedTime, 1.1) * (1.0 + Math.sqrt(priority));
+        return Math.pow(estimatedTime, 1.1) * (1 + Math.sqrt(priority));
     }
     
    
@@ -245,9 +235,9 @@ public class MyMailPool implements IMailPool {
     /**
      * MeasureComparator is a class used for comparing
      * two mail items according to the estimated measure
-     * score for the items. Items with larger measure scores
-     * are considered 'greater' than items with lower estimated
-     * measure scores.
+     * score for the items. Items with larger estimated measure 
+     * scores are considered 'greater' than items with lower 
+     * estimated measure scores.
      */
     public class MeasureComparator implements Comparator<MailItem> {
         @Override

@@ -22,16 +22,16 @@ import automail.Building;
 
 /**
  * MyRobotBehaviour is responsible for controlling
- * the behaviour of a robot, including the return of
- * a robot to the mail room, and is also responsible
- * for notifying the robot of any newly arrived priority 
- * mail.
+ * the behaviour of a robot, including the potential 
+ * return of a robot to the mail room if certain circumstances
+ * deem it as favourable. The class is also responsible for notifying 
+ * the robot of any newly arrived priority mail, from which
+ * the information gained is used as a basis for its decisions.
  */
 public class MyRobotBehaviour implements IRobotBehaviour {
 	
 	/** Class constants. */
 	private static int HIGH_PRIORITY = 100;
-	
 	
 	/** Instance variables. */
 	private int weightLimit;
@@ -92,8 +92,8 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 			mailItem = tube.peek();
 		}
 		
-		/* If there is a new priority item with priority level
-		 * equal to 100, and our tube only contains a non-priority 
+		/* If there is a new priority item with the highest priority
+		 * level, and our tube only contains a non-priority 
 		 * mail with destination floor less than the middle floor
 		 * of the building, then tell the robot to return.
 		 */
