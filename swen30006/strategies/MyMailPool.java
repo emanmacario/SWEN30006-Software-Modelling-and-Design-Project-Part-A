@@ -5,7 +5,7 @@
  * 
  * Name: Emmanuel Macario
  * Student Number: 831659
- * Last Modified: 19/03/18
+ * Last Modified: 20/03/18
  * 
  */
 
@@ -20,10 +20,7 @@ import java.util.Comparator;
 
 
 /** Importing classes from the package. */
-import automail.Clock;
-import automail.MailItem;
-import automail.StorageTube;
-import automail.PriorityMailItem;
+import automail.*;
 import exceptions.TubeFullException;
 
 
@@ -32,7 +29,6 @@ import exceptions.TubeFullException;
  * My implementation of the MyMailPool class. Sorts
  * mail according to priority and destination
  * floor.
- *
  */
 public class MyMailPool implements IMailPool {
     
@@ -45,6 +41,8 @@ public class MyMailPool implements IMailPool {
     
     /** 
      * MyMailPool constructor.
+     * @param void
+     * @return New MyMailPool object.
      */
     public MyMailPool() {
         itemPool = new ArrayList<MailItem>();
@@ -66,8 +64,9 @@ public class MyMailPool implements IMailPool {
     /**
      * Fills the current storage tube with the item(s) that
      * have accumulated the highest 'measure' score thus far.
-     * Only mail items with weight lower than the threshold limit
-     * for the particular robot are considered.
+     * Only mail items with weight lower than the weight threshold 
+     * for the particular robot are considered for filling the
+     * storage tube.
      * 
      * @param tube refers to the pack the robot uses to deliver mail.
      * @param strong is whether the tube belongs to a strong robot.
@@ -75,23 +74,22 @@ public class MyMailPool implements IMailPool {
     @Override
     public void fillStorageTube(StorageTube tube, boolean strong) {
     	
-    	/** Get the maximum weight limit for the robot.
+    	/* Get the maximum weight limit for the robot.
     	 */
     	int weightLimit = getWeightLimit(strong);
     	
-    	/** Calculate the total number of
+    	/* Calculate the total number of
     	 * free slots in the storage tube.
     	 */
     	int availableSlots = tube.MAXIMUM_CAPACITY - tube.getSize();
     	
     	
-    	/** Get the 'best' items to add to the tube.
+    	/* Get the 'best' items to add to the tube.
     	 */
     	ArrayList<MailItem> itemsToAdd = getBestMail(weightLimit, availableSlots);
     	
     	
-    	/**
-    	 * Insert each item into the tube in order
+    	/* Insert each item into the tube in order
     	 * of highest destination floor foremost.
     	 */
     	for (int i = itemsToAdd.size()-1; i >= 0; i--) {
@@ -101,14 +99,13 @@ public class MyMailPool implements IMailPool {
                 e.printStackTrace();
             }
         }
-    	
     }
     
 
     /**
      * Selects the 'best' possible items to be delivered by
      * the current robot. Does this by sorting the entire mail
-     * pool by the estimated time measure for each item, and
+     * pool by the estimated time measure score for each item, and
      * then choosing the items that have accumulated the highest
      * measure scores to be delivered first.
      * 
@@ -122,7 +119,7 @@ public class MyMailPool implements IMailPool {
     	 */
     	ArrayList<MailItem> itemsToAdd = new ArrayList<>();
         
-    	/* Objects to help in sorting the mail items.
+    	/* Objects to help with sorting the mail items.
     	 */
         MeasureComparator measureComparator = new MeasureComparator();
         FloorComparator floorComparator = new FloorComparator();
@@ -130,10 +127,6 @@ public class MyMailPool implements IMailPool {
         /* Firstly, sort the mail by estimated measure values.
          */
         Collections.sort(itemPool, measureComparator);
-        
-        /* Print mail pool contents.
-         */
-        printMailPool();
         
         /* Then, for each available slot in the tube, try to add 
          * the 'best' possible mail item to the collection 
@@ -189,13 +182,13 @@ public class MyMailPool implements IMailPool {
     
     
     /**
-     * Calculates the estimated measure of time taken to
-     * deliver an item. This is the same measure used
+     * Calculates the estimated measure score of time taken 
+     * to deliver an item. This is the same measure used
      * to judge the system's performance across all delivered
      * mailed items.
      * 
      * @param mailItem
-     * @return An estimate of the measure.
+     * @return An estimate of the measure score.
      */
     private double calculateMeasureScore(MailItem mailItem) {
         
@@ -236,9 +229,10 @@ public class MyMailPool implements IMailPool {
     
     
     /** 
-     * FloorComparator is used for sorting mail items
-     * by ascending order of their respective destination 
-     * floors.
+     * FloorComparator is a class used for comparing
+     * two mail items according to their destination
+     * floors. Higher destination floor items
+     * are considered 'greater' than lower ones.
      */
     public class FloorComparator implements Comparator<MailItem> {
         @Override
@@ -249,8 +243,11 @@ public class MyMailPool implements IMailPool {
     
     
     /**
-     * MeasureComparator is used for sorting mail items
-     * by their respective measure score.
+     * MeasureComparator is a class used for comparing
+     * two mail items according to the estimated measure
+     * score for the items. Items with larger measure scores
+     * are considered 'greater' than items with lower estimated
+     * measure scores.
      */
     public class MeasureComparator implements Comparator<MailItem> {
         @Override

@@ -5,7 +5,7 @@
  * 
  * Name: Emmanuel Macario
  * Student Number: 831659
- * Last Modified: 19/03/18
+ * Last Modified: 20/03/18
  * 
  */
 
@@ -20,25 +20,51 @@ import automail.StorageTube;
 import automail.Building;
 
 
-
+/**
+ * MyRobotBehaviour is responsible for controlling
+ * the behaviour of a robot, including the return of
+ * a robot to the mail room, and is also responsible
+ * for notifying the robot of any newly arrived priority 
+ * mail.
+ */
 public class MyRobotBehaviour implements IRobotBehaviour {
 	
+	/** Class constants. */
+	private static int HIGH_PRIORITY = 100;
+	
+	
+	/** Instance variables. */
 	private int weightLimit;
 	private int newPriorityLevel;
 	private boolean newPriority;
 	
 	
+	/**
+	 * MyRobotBehaviour constructor.
+	 * 
+	 * @param strong true or false, indicating strong or weak robot.
+	 * @return a new MyRobotBehaviour object.
+	 */
 	public MyRobotBehaviour(boolean strong) {
 		this.weightLimit = getWeightLimit(strong);
 	}
 	
 	
 	/**
-	 * startDelivery() provides the robot the opportunity to 
-	 * initialise state in support of the other methods below. 
+	 * Provides the robot the opportunity to initialise 
+	 * state in support of the other methods below. 
+	 * 
+	 * @param void
+	 * @return void
 	 */
 	@Override
 	public void startDelivery() {
+		
+		/* At the start of the delivery, reset
+		 * the flags indicating whether a new
+		 * priority mail item has arrived in 
+		 * the mail room.
+		 */
 		this.newPriority = false;
 		this.newPriorityLevel = 0;
 		
@@ -46,18 +72,20 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	
 	
 	/** 
+	 * Allows the robot to return with items still in the
+	 * tube, if certain circumstances make this desirable.
+	 * The robot will always return to the mail room when
+	 * the tube is empty.
+	 * 
 	 * @param tube refers to the pack the robot uses to deliver mail.
 	 * @return When this is true, the robot is returned to the mail room.
-	 * The robot will always return to the mail room when the tube is empty.
-	 * This method allows the robot to return with items still in the tube,
-	 * if circumstances make this desirable.
 	 */
 	@Override
 	public boolean returnToMailRoom(StorageTube tube) {
 		
 		MailItem mailItem = null;
 		
-		/* Get the uppermost mail item
+		/* Get the 'uppermost' mail item
 		 * in the tube, if there is one.
 		 */
 		if (tube.getSize() > 0) {
@@ -69,7 +97,7 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 		 * mail with destination floor less than the middle floor
 		 * of the building, then tell the robot to return.
 		 */
-		if (newPriority && newPriorityLevel == 100
+		if (newPriority && newPriorityLevel == HIGH_PRIORITY
 						&& mailItem != null
 						&& !(mailItem instanceof PriorityMailItem)
 						&& tube.getSize() == 1
@@ -84,10 +112,13 @@ public class MyRobotBehaviour implements IRobotBehaviour {
 	
 	
 	/**
-     * @param priority is that of the priority mail item which just arrived.
-     * @param weight is that of the same item.
-     * The automail system broadcasts this information to all robots
-     * when a new priority mail items arrives at the building.
+	 * Notifies a robot when a new priority mail
+	 * item arrives at the building, with weight
+	 * less than the maximum weight limit of a
+	 * single item for the robot.
+	 * 
+     * @param priority 	Priority level of arriving mail item.
+     * @param weight    The weight value of the priority item.
      */
 	@Override
 	public void priorityArrival(int priority, int weight) {
